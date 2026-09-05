@@ -234,3 +234,19 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     points: Optional[int] = None
 
+
+class PointAdjustRequest(BaseModel):
+    points_delta: int  # e.g. +500 to award, -100 to deduct
+    reason: Optional[str] = "Admin manual adjustment"
+    notify_user: bool = True
+
+
+class UserCreateAdmin(BaseModel):
+    id: int  # Telegram user ID
+    username: Optional[str] = ""
+    first_name: str
+    last_name: Optional[str] = ""
+    phone: Optional[str] = ""
+    default_address: Optional[str] = ""
+    points: int = 100
+
