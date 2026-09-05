@@ -18,7 +18,18 @@ from sqlalchemy.orm import declarative_base, relationship
 
 load_dotenv()
 
-RAW_DB_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./shop.db")
+RAW_DB_URL = os.getenv("DATABASE_URL")
+
+# If DATABASE_URL is not provided or points to local relative SQLite:
+# Automatically persist SQLite on /var/data/shop.db if Render persistent disk is mounted
+if not RAW_DB_URL:
+    if os.path.exists("/var/data"):
+        RAW_DB_URL = "sqlite+aiosqlite:////var/data/shop.db"
+    else:
+        RAW_DB_URL = "sqlite+aiosqlite:///./shop.db"
+elif RAW_DB_URL in ("sqlite+aiosqlite:///./shop.db", "sqlite:///./shop.db"):
+    if os.path.exists("/var/data") or "/var/data" in os.getenv("UPLOAD_DIR", ""):
+        RAW_DB_URL = "sqlite+aiosqlite:////var/data/shop.db"
 
 # Automatically adapt Render's postgres:// or postgresql:// to postgresql+asyncpg://
 if RAW_DB_URL.startswith("postgres://"):
@@ -224,20 +235,23 @@ async def init_db():
             if "khqr_md5" not in order_cols:
                 connection.execute(text("ALTER TABLE orders ADD COLUMN khqr_md5 VARCHAR(100) DEFAULT ''"))
 
-            # Default promo codes
-            existing_codes = [r[0] for r in connection.execute(text("SELECT code FROM promocodes")).fetchall()]
-            default_promos = [
-                ("WELCOME10", "percentage", 10.0, 0.0, 50.0, "10% off entire order for all new shoppers"),
-                ("SAVE20", "percentage", 20.0, 50.0, 100.0, "20% off on orders over $50"),
-                ("MINI5", "fixed", 5.0, 20.0, 5.0, "$5 off on orders over $20"),
-                ("VIP50", "percentage", 50.0, 100.0, 150.0, "VIP exclusive 50% discount on orders over $100"),
-            ]
-            for code, dtype, val, min_sp, max_d, desc in default_promos:
-                if code not in existing_codes:
-                    connection.execute(text(
-                        "INSERT INTO promocodes (code, discount_type, discount_value, min_spend, max_discount, description, is_active) "
-                        "VALUES (:code, :dtype, :val, :min_sp, :max_d, :desc, 1)"
-                    ), {"code": code, "dtype": dtype, "val": val, "min_sp": min_sp, "max_d": max_d, "desc": desc})
+            # Default promo codes (seed only once during initial setup so deleted codes stay deleted)
+            promos_seeded = connection.execute(text("SELECT value FROM store_settings WHERE key = 'promos_initialized'")).scalar()
+            if not promos_seeded:
+                existing_codes = [r[0] for r in connection.execute(text("SELECT code FROM promocodes")).fetchall()]
+                if not existing_codes:
+                    default_promos = [
+                        ("WELCOME10", "percentage", 10.0, 0.0, 50.0, "10% off entire order for all new shoppers"),
+                        ("SAVE20", "percentage", 20.0, 50.0, 100.0, "20% off on orders over $50"),
+                        ("MINI5", "fixed", 5.0, 20.0, 5.0, "$5 off on orders over $20"),
+                        ("VIP50", "percentage", 50.0, 100.0, 150.0, "VIP exclusive 50% discount on orders over $100"),
+                    ]
+                    for code, dtype, val, min_sp, max_d, desc in default_promos:
+                        connection.execute(text(
+                            "INSERT INTO promocodes (code, discount_type, discount_value, min_spend, max_discount, description, is_active) "
+                            "VALUES (:code, :dtype, :val, :min_sp, :max_d, :desc, 1)"
+                        ), {"code": code, "dtype": dtype, "val": val, "min_sp": min_sp, "max_d": max_d, "desc": desc})
+                connection.execute(text("INSERT INTO store_settings (key, value) VALUES ('promos_initialized', 'true')"))
 
             # Default Store Settings (Name, Logo, Password)
             existing_settings = [r[0] for r in connection.execute(text("SELECT key FROM store_settings")).fetchall()]

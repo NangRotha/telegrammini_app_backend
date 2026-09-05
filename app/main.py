@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi.staticfiles import StaticFiles
 
+from app.config import UPLOAD_DIR, ensure_upload_dirs
 from app.database import init_db
 from app.seed import seed_data
 from app.telegram_service import run_bot_polling
@@ -19,7 +20,8 @@ logger = logging.getLogger("app.main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: initialize database and seed
+    # Startup: ensure upload directories exist, initialize database and seed
+    ensure_upload_dirs()
     logger.info("Initializing database...")
     await init_db()
     logger.info("Checking & seeding initial catalog...")
@@ -56,9 +58,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount local PC uploads directory for images, videos, and avatars
-UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Mount uploads directory for images, videos, and avatars (configured for persistent storage in Render)
+ensure_upload_dirs()
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Include API Routers
@@ -76,6 +77,7 @@ app.include_router(settings.router, prefix="/api")
 
 
 @app.websocket("/api/ws")
+@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:

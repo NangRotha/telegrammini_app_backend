@@ -6,3 +6,6 @@ venv/
 ENV/
 *.db
 shop.db
+.env
+uploads/
+

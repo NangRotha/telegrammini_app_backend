@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, cast, String
 import logging
 
+from app.config import AVATARS_DIR, ensure_upload_dirs
 from app.database import get_db, User
 from app.schemas import UserResponse, UserUpdate, PointAdjustRequest, UserCreateAdmin
 from app.websocket_manager import ws_manager
@@ -15,8 +16,7 @@ from app.websocket_manager import ws_manager
 logger = logging.getLogger("users_router")
 router = APIRouter(prefix="/users", tags=["Users"])
 
-AVATARS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "avatars"))
-os.makedirs(AVATARS_DIR, exist_ok=True)
+ensure_upload_dirs()
 ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 

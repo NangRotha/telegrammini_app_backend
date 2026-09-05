@@ -3,17 +3,11 @@ import time
 import uuid
 import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from app.config import IMAGES_DIR, VIDEOS_DIR, ensure_upload_dirs
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
-UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
-IMAGES_DIR = os.path.join(UPLOAD_DIR, "images")
-VIDEOS_DIR = os.path.join(UPLOAD_DIR, "videos")
-AVATARS_DIR = os.path.join(UPLOAD_DIR, "avatars")
-
-os.makedirs(IMAGES_DIR, exist_ok=True)
-os.makedirs(VIDEOS_DIR, exist_ok=True)
-os.makedirs(AVATARS_DIR, exist_ok=True)
+ensure_upload_dirs()
 
 ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
 ALLOWED_VIDEO_EXTS = {".mp4", ".webm", ".mov", ".m4v", ".mkv"}

@@ -68,7 +68,12 @@ async def create_product(payload: ProductCreate, db: AsyncSession = Depends(get_
     saved_prod = result.scalar_one()
 
     try:
-        await ws_manager.broadcast("PRODUCT_UPDATED", {"action": "create", "product_id": saved_prod.id})
+        prod_data = ProductResponse.model_validate(saved_prod).model_dump(mode="json")
+        await ws_manager.broadcast("PRODUCT_UPDATED", {
+            "action": "create",
+            "product_id": saved_prod.id,
+            "product": prod_data,
+        })
     except Exception as ws_err:
         print(f"WebSocket broadcast warning: {ws_err}")
 
@@ -98,12 +103,22 @@ async def update_product(prod_id: int, payload: ProductUpdate, db: AsyncSession 
     await db.commit()
     await db.refresh(prod)
 
+    # Reload with category for broadcast
+    query = select(Product).options(selectinload(Product.category)).where(Product.id == prod.id)
+    result = await db.execute(query)
+    refreshed_prod = result.scalar_one()
+
     try:
-        await ws_manager.broadcast("PRODUCT_UPDATED", {"action": "update", "product_id": prod.id})
+        prod_data = ProductResponse.model_validate(refreshed_prod).model_dump(mode="json")
+        await ws_manager.broadcast("PRODUCT_UPDATED", {
+            "action": "update",
+            "product_id": refreshed_prod.id,
+            "product": prod_data,
+        })
     except Exception as ws_err:
         print(f"WebSocket broadcast warning: {ws_err}")
 
-    return prod
+    return refreshed_prod
 
 
 @router.delete("/{prod_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -117,7 +132,10 @@ async def delete_product(prod_id: int, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     try:
-        await ws_manager.broadcast("PRODUCT_UPDATED", {"action": "delete", "product_id": prod_id})
+        await ws_manager.broadcast("PRODUCT_UPDATED", {
+            "action": "delete",
+            "product_id": prod_id,
+        })
     except Exception as ws_err:
         print(f"WebSocket broadcast warning: {ws_err}")
 

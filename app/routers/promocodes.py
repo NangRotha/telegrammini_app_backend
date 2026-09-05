@@ -11,6 +11,7 @@ from app.schemas import (
     PromoCodeValidateRequest,
     PromoCodeValidateResponse,
 )
+from app.websocket_manager import ws_manager
 
 router = APIRouter(prefix="/promocodes", tags=["PromoCodes"])
 
@@ -55,6 +56,17 @@ async def create_promocode(
     db.add(promocode)
     await db.commit()
     await db.refresh(promocode)
+
+    try:
+        await ws_manager.broadcast("PROMO_UPDATED", {
+            "action": "create",
+            "id": promocode.id,
+            "code": promocode.code,
+            "is_active": promocode.is_active,
+        })
+    except Exception as ws_err:
+        pass
+
     return promocode
 
 
@@ -95,6 +107,17 @@ async def update_promocode(
 
     await db.commit()
     await db.refresh(promocode)
+
+    try:
+        await ws_manager.broadcast("PROMO_UPDATED", {
+            "action": "update",
+            "id": promocode.id,
+            "code": promocode.code,
+            "is_active": promocode.is_active,
+        })
+    except Exception as ws_err:
+        pass
+
     return promocode
 
 
@@ -108,8 +131,19 @@ async def delete_promocode(
     if not promocode:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promo code not found")
 
+    code_saved = promocode.code
     await db.delete(promocode)
     await db.commit()
+
+    try:
+        await ws_manager.broadcast("PROMO_UPDATED", {
+            "action": "delete",
+            "id": promocode_id,
+            "code": code_saved,
+        })
+    except Exception as ws_err:
+        pass
+
     return None
 
 

@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: minishop-telegram-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: BOT_TOKEN
+        value: 8704943227:AAEQz0QRoeSRuZLU-DtYg7o6XRDuOIWIBjA
+      - key: ADMIN_TELEGRAM_ID
+        value: "8401599473"
+      - key: KHQR_PROFILE_ID
+        value: 64BHRPOl0tGc3IMdw3V1ysjwhFKVC8EH
+      - key: KHQR_SECRET_KEY
+        value: cr6NRkWA2q3sq3rbR4VZshMRZQIj56L6
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./shop.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: MINI_APP_URL
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
+    # Optional: Attach Persistent Disk on Render Starter+ plan
+    # disk:
+    #   name: minishop-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
