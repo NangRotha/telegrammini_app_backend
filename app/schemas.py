@@ -137,6 +137,8 @@ class PromoCodeValidateResponse(BaseModel):
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int = Field(..., gt=0)
+    selected_image: Optional[str] = ""
+    variant_name: Optional[str] = ""
 
 
 class OrderItemResponse(BaseModel):
@@ -146,6 +148,8 @@ class OrderItemResponse(BaseModel):
     price: float
     quantity: int
     subtotal: float
+    selected_image: Optional[str] = ""
+    variant_name: Optional[str] = ""
     model_config = ConfigDict(from_attributes=True)
 
 

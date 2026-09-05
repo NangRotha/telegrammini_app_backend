@@ -112,7 +112,7 @@ async def send_order_confirmation(order, items) -> bool:
         return False
 
     items_list_html = "\n".join(
-        f"• <b>{item.product_title}</b> x{item.quantity} — <i>${item.subtotal:.2f}</i>"
+        f"• <b>{item.product_title}</b>{f' (<i>{item.variant_name}</i>)' if getattr(item, 'variant_name', None) else ''} x{item.quantity} — <i>${item.subtotal:.2f}</i>"
         for item in items
     )
 
@@ -143,7 +143,7 @@ async def send_order_confirmation(order, items) -> bool:
 async def send_admin_order_alert(order, items) -> bool:
     """Sends instant alert to Store Admin (Rotha)."""
     items_list = "\n".join(
-        f"  • {item.product_title} x{item.quantity} (${item.subtotal:.2f})"
+        f"  • {item.product_title}{f' [{item.variant_name}]' if getattr(item, 'variant_name', None) else ''} x{item.quantity} (${item.subtotal:.2f})"
         for item in items
     )
 

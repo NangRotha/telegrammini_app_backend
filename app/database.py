@@ -178,6 +178,8 @@ class OrderItem(Base):
     price = Column(Float, nullable=False)
     quantity = Column(Integer, default=1)
     subtotal = Column(Float, nullable=False)
+    selected_image = Column(String(500), nullable=True, default="")
+    variant_name = Column(String(100), nullable=True, default="")
 
     order = relationship("Order", back_populates="items")
 
@@ -234,6 +236,13 @@ async def init_db():
                 connection.execute(text("ALTER TABLE orders ADD COLUMN khqr_string TEXT DEFAULT ''"))
             if "khqr_md5" not in order_cols:
                 connection.execute(text("ALTER TABLE orders ADD COLUMN khqr_md5 VARCHAR(100) DEFAULT ''"))
+
+            # Order items table columns
+            item_cols = [c["name"] for c in inspector.get_columns("order_items")]
+            if "selected_image" not in item_cols:
+                connection.execute(text("ALTER TABLE order_items ADD COLUMN selected_image TEXT DEFAULT ''"))
+            if "variant_name" not in item_cols:
+                connection.execute(text("ALTER TABLE order_items ADD COLUMN variant_name VARCHAR(100) DEFAULT ''"))
 
             # Default promo codes (seed only once during initial setup so deleted codes stay deleted)
             promos_seeded = connection.execute(text("SELECT value FROM store_settings WHERE key = 'promos_initialized'")).scalar()

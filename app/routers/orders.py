@@ -59,6 +59,8 @@ async def create_order(payload: OrderCreate, db: AsyncSession = Depends(get_db))
                 price=prod.price,
                 quantity=item.quantity,
                 subtotal=subtotal,
+                selected_image=item.selected_image or prod.image_url or "",
+                variant_name=item.variant_name or "",
             )
         )
 
