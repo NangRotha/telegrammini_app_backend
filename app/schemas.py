@@ -23,6 +23,7 @@ class CategoryUpdate(BaseModel):
 
 class CategoryResponse(CategoryBase):
     id: int
+    product_count: Optional[int] = 0
     model_config = ConfigDict(from_attributes=True)
 
 

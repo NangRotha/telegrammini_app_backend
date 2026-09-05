@@ -54,7 +54,7 @@ class Category(Base):
     slug = Column(String(100), unique=True, index=True, nullable=False)
     icon = Column(String(50), default="📦")
 
-    products = relationship("Product", back_populates="category", cascade="all, delete-orphan")
+    products = relationship("Product", back_populates="category")
 
 
 class Product(Base):
