@@ -35,7 +35,7 @@ async def get_user_profile(telegram_id: int, db: AsyncSession = Depends(get_db))
             phone="",
             default_address="",
             avatar_url="",
-            points=100,
+            points=0,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -81,7 +81,7 @@ async def upload_user_avatar(
         user = User(
             id=telegram_id,
             avatar_url=avatar_url,
-            points=100,
+            points=0,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -123,7 +123,7 @@ async def update_user_profile(
             phone=payload.phone or "",
             default_address=payload.default_address or "",
             avatar_url=payload.avatar_url or "",
-            points=payload.points if payload.points is not None else 100,
+            points=payload.points if payload.points is not None else 0,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -239,7 +239,7 @@ async def adjust_user_points(
         user = User(
             id=telegram_id,
             first_name=f"Customer {telegram_id}",
-            points=max(0, 100 + payload.points_delta),
+            points=max(0, payload.points_delta),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )

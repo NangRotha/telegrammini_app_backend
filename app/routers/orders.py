@@ -73,7 +73,7 @@ async def create_order(payload: OrderCreate, db: AsyncSession = Depends(get_db))
                 username=payload.username,
                 first_name=payload.customer_name,
                 phone=payload.customer_phone,
-                points=100,
+                points=0,
             )
             db.add(user)
         else:

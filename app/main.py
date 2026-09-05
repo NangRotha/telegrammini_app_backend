@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database import init_db
 from app.seed import seed_data
 from app.telegram_service import run_bot_polling
-from app.routers import categories, products, orders, stats, bot, users, upload, promocodes, payment
+from app.routers import categories, products, orders, stats, bot, users, upload, promocodes, payment, alerts, settings
 from app.websocket_manager import ws_manager
 
 logging.basicConfig(level=logging.INFO)
@@ -71,6 +71,8 @@ app.include_router(users.router, prefix="/api")
 app.include_router(upload.router, prefix="/api")
 app.include_router(promocodes.router, prefix="/api")
 app.include_router(payment.router, prefix="/api")
+app.include_router(alerts.router, prefix="/api")
+app.include_router(settings.router, prefix="/api")
 
 
 @app.websocket("/api/ws")

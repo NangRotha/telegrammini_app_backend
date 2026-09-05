@@ -86,11 +86,33 @@ class User(Base):
     phone = Column(String(50), nullable=True)
     default_address = Column(Text, nullable=True, default="")
     avatar_url = Column(String(500), nullable=True, default="")
-    points = Column(Integer, default=100)
+    points = Column(Integer, default=0)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     orders = relationship("Order", back_populates="user")
+
+
+class AlertPopup(Base):
+    __tablename__ = "alert_popups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False, default="")
+    image_url = Column(String(500), nullable=True, default="")
+    button_text = Column(String(50), nullable=True, default="Got It")
+    button_link = Column(String(500), nullable=True, default="")
+    popup_type = Column(String(50), default="promo")  # promo, announcement, info, warning
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class StoreSetting(Base):
+    __tablename__ = "store_settings"
+
+    key = Column(String(100), primary_key=True, index=True)
+    value = Column(Text, nullable=False, default="")
 
 
 class PromoCode(Base):
@@ -174,7 +196,7 @@ async def init_db():
             if "avatar_url" not in user_cols:
                 connection.execute(text("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''"))
             if "points" not in user_cols:
-                connection.execute(text("ALTER TABLE users ADD COLUMN points INTEGER DEFAULT 100"))
+                connection.execute(text("ALTER TABLE users ADD COLUMN points INTEGER DEFAULT 0"))
 
             # Products table columns
             prod_cols = [c["name"] for c in inspector.get_columns("products")]
@@ -216,5 +238,21 @@ async def init_db():
                         "INSERT INTO promocodes (code, discount_type, discount_value, min_spend, max_discount, description, is_active) "
                         "VALUES (:code, :dtype, :val, :min_sp, :max_d, :desc, 1)"
                     ), {"code": code, "dtype": dtype, "val": val, "min_sp": min_sp, "max_d": max_d, "desc": desc})
+
+            # Default Store Settings (Name, Logo, Password)
+            existing_settings = [r[0] for r in connection.execute(text("SELECT key FROM store_settings")).fetchall()]
+            default_settings = [
+                ("store_name", "Mini Shop"),
+                ("store_logo", "🛍"),
+                ("store_tagline", "Store Admin"),
+                ("admin_username", "admin"),
+                ("admin_password_hash", "08d021dd0ab454eeba0dff703700d9c01d50da684f52853534d3b89e10c487a5"),  # admin123
+            ]
+            for k, v in default_settings:
+                if k not in existing_settings:
+                    connection.execute(
+                        text("INSERT INTO store_settings (key, value) VALUES (:key, :value)"),
+                        {"key": k, "value": v}
+                    )
 
         await conn.run_sync(check_and_migrate)

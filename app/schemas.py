@@ -220,7 +220,7 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     default_address: Optional[str] = ""
     avatar_url: Optional[str] = ""
-    points: int = 100
+    points: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
@@ -249,5 +249,64 @@ class UserCreateAdmin(BaseModel):
     last_name: Optional[str] = ""
     phone: Optional[str] = ""
     default_address: Optional[str] = ""
-    points: int = 100
+    points: int = 0
+
+
+# ==================== Alert Popup Schemas ====================
+
+class AlertPopupBase(BaseModel):
+    title: str = Field(..., max_length=200)
+    message: str = Field(default="")
+    image_url: Optional[str] = ""
+    button_text: Optional[str] = "Got It"
+    button_link: Optional[str] = ""
+    popup_type: Optional[str] = "promo"
+    is_active: bool = True
+
+
+class AlertPopupCreate(AlertPopupBase):
+    pass
+
+
+class AlertPopupUpdate(BaseModel):
+    title: Optional[str] = None
+    message: Optional[str] = None
+    image_url: Optional[str] = None
+    button_text: Optional[str] = None
+    button_link: Optional[str] = None
+    popup_type: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class AlertPopupResponse(AlertPopupBase):
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== Store Settings & Auth Schemas ====================
+
+class StoreSettingsResponse(BaseModel):
+    store_name: str = "Mini Shop"
+    store_logo: str = "🛍"
+    store_tagline: str = "Store Admin"
+    admin_username: str = "admin"
+
+
+class StoreSettingsUpdate(BaseModel):
+    store_name: Optional[str] = None
+    store_logo: Optional[str] = None
+    store_tagline: Optional[str] = None
+
+
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AdminChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 
